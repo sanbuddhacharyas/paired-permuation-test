@@ -43,10 +43,12 @@ def pair_permutation_test(model1_pred: np.array,
 
 
 def find_paired_permutation_test(dataset:Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series],
-                                 model1_:BaseEstimator,
-                                 model2_:BaseEstimator,
+                                 model1:BaseEstimator,
+                                 model2:BaseEstimator,
                                  model1_name:str,
-                                 model2_name:str) -> pd.DataFrame:
+                                 model2_name:str, 
+                                 metric: Callable[[np.ndarray, np.ndarray], float],
+                                 n_permutations=10000) -> pd.DataFrame:
     """
         Calculates Statistical Significance level p-value for all the given pairs
     """
@@ -54,9 +56,6 @@ def find_paired_permutation_test(dataset:Tuple[pd.DataFrame, pd.DataFrame, pd.Se
     df      = pd.DataFrame(columns=['Model Comparison', 'Observed Diff', 'Diff mean', 'Diff std', 'p value'])
     (X_train, X_test, y_train, y_test) = dataset
     
-    # Load Models
-    model1  = model1_.copy()
-    model2  = model2_.copy()
 
     # Fit model with the best features
     model1.fit(X_train, y_train)
@@ -67,7 +66,7 @@ def find_paired_permutation_test(dataset:Tuple[pd.DataFrame, pd.DataFrame, pd.Se
     model2_pred = model2.predict(X_test)
 
     # Peform permutation test
-    _, observed_diff, p_value, diff_mean, diff_std = pair_permutation_test(model1_pred, model2_pred, y_test)
+    observed_diff, p_value, diff_mean, diff_std = pair_permutation_test(model1_pred, model2_pred, y_test, n_permutations, metric)
 
     temp = pd.DataFrame.from_dict({'Model Comparison':[f"{model1_name}--------- {model2_name}"], \
                                 'Observed Diff':[observed_diff], \
