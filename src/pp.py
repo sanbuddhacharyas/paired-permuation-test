@@ -39,7 +39,7 @@ def pair_permutation_test(model1_pred: np.array,
     # Calculate p-value
     p_value = np.mean(permutation_statistics >= observed_statistic)
 
-    return observed_statistic, p_value, permutation_statistics.mean(), permutation_statistics.std()
+    return observed_statistic, p_value, permutation_statistics.mean(), permutation_statistics.std(), model1_scores, model2_scores
 
 
 def find_paired_permutation_test(dataset:Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series],
@@ -53,7 +53,6 @@ def find_paired_permutation_test(dataset:Tuple[pd.DataFrame, pd.DataFrame, pd.Se
         Calculates Statistical Significance level p-value for all the given pairs
     """
 
-    df      = pd.DataFrame(columns=['Model Comparison', 'Observed Diff', 'Diff mean', 'Diff std', 'p value'])
     (X_train, X_test, y_train, y_test) = dataset
     
 
@@ -66,12 +65,14 @@ def find_paired_permutation_test(dataset:Tuple[pd.DataFrame, pd.DataFrame, pd.Se
     model2_pred = model2.predict(X_test)
 
     # Peform permutation test
-    observed_diff, p_value, diff_mean, diff_std = pair_permutation_test(model1_pred, model2_pred, y_test, n_permutations, metric)
+    observed_diff, p_value, diff_mean, diff_std, model1_scores, model2_scores = pair_permutation_test(model1_pred, model2_pred, y_test, n_permutations, metric)
 
-    temp = pd.DataFrame.from_dict({'Model Comparison':[f"{model1_name}--------- {model2_name}"], \
-                                'Observed Diff':[observed_diff], \
-                                'Diff mean':diff_mean, 'Diff std':diff_std,'p value':[p_value]})
-    
-    df   = pd.concat([df, temp], ignore_index=True)
+    df = pd.DataFrame.from_dict({'Model Comparison':[f"{model1_name} | {model2_name}"],
+                                   f'{model1_name}': model1_scores,
+                                   f'{model2_name}': model2_scores,
+                                   'Observed Diff':[observed_diff],
+                                   'Diff mean':diff_mean, 
+                                   'Diff std':diff_std,
+                                   'p value':[p_value]})
 
     return df
